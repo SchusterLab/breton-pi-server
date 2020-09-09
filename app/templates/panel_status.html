@@ -1,0 +1,84 @@
+<head>
+  <link rel=stylesheet type=text/css href="{{ url_for('static', filename='grafana.control.panel.css') }}">
+</head>
+<style>
+  .container {
+    padding: 10px 50px 20px; margin-left: 0; position: relative;
+  }
+</style>
+<div class="container">
+  <img id="diagram" src="/flask/static/cycle_default.svg">
+  <div id="1k_pot" style="position:absolute; top:220px; left:16px;" title="1k_pot">--</div>
+  <div id="1k_plate" style="position:absolute; top:220px; left:260px;" title="1k_plate">--</div>
+  <div id="4k_plate" style="position:absolute; top:135px; left:2px;" title="4k_plate">--</div>
+  <div id="pump" style="position:absolute; top:16px; left:250px;" title="pump">--</div>
+  <div id="pump_hs" style="position:absolute; top:70px; left:300px;" title="pump_hs">--</div>
+  <img id="HS_pump" src="/flask/static/switch_off.svg" style="position:absolute; top:86px; left:249px; width:42px; height:42px;" alt="OFF" title="OFF">
+  <img id="HS_1k" src="/flask/static/switch_off.svg" style="position:absolute; top:178px; left:163px; width:42px; height:42px;" alt="OFF" title="OFF">
+  <div style="background: #262626; border:solid 1px white; border-radius:4px; width:82; height:76; position:absolute; top:1px; left:1px">
+    <div style="position:absolute; top:2px; left:6px;">Pulse Tube</div>
+    <img id="PT" src="/flask/static/switch_off.svg" style="position:absolute; top:24px; left:18px; width:42px; height:42px;" alt="OFF" title="OFF">
+  </div>
+</div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script>window.jQuery || document.write('<script src="{{url_for('static', filename='jquery.js') }}">\x3C/script>')</script>
+<script>
+var TempKeys = ["1k_plate", "1k_pot", "4k_plate", "pump", "pump_hs"];
+var path = "/flask/static/";
+var states = {"WAIT FOR HS":"cycle_default.svg","DESORB":"cycle_desorb.svg","CONDENSE":"cycle_condense.svg","PUMP":"cycle_pump.svg","RUNNING":"cycle_running.svg"};
+var switches = {"1k_hs":"HS_1k","pump_hs":"HS_pump"};
+var indicator_on = path + "switch_on.svg"
+var indicator_off = path + "switch_off.svg"
+var refreshInterval = 5000;
+
+function updateTemps(){
+  $.getJSON("/flask/get/temps", function(result){
+    $.each(result, function(key, val){
+      if(TempKeys.includes(key)){
+        document.getElementById(key).innerHTML=val.toFixed(2)+" K";
+      }
+    });
+  });
+}
+function updateStates(){
+  $.getJSON("/flask/get/state", function(result){
+    var val = result.state;
+    if(val in states){
+      document.getElementById("diagram").src=path+states[val];
+      document.getElementById("diagram").alt=val;
+      document.getElementById("diagram").title=val;
+    }else{
+      document.getElementById("diagram").src=path+states["WAIT FOR HS"];
+      document.getElementById("diagram").alt="DEFAULT";
+      document.getElementById("diagram").title="DEFAULT";
+    }
+  });
+  $.getJSON("/flask/get/switches", function(result){
+    $.each(result, function(key, val){
+      if(key in switches){
+        if(val){
+          document.getElementById(switches[key]).src=indicator_on;
+          document.getElementById(switches[key]).alt='ON';
+          document.getElementById(switches[key]).title='ON';
+        }else{
+          document.getElementById(switches[key]).src=indicator_off;
+          document.getElementById(switches[key]).alt='OFF';
+          document.getElementById(switches[key]).title='OFF';
+        }
+      }
+    });
+  });
+}
+function updatePT(){
+  document.getElementById("PT").src=indicator_on;
+  document.getElementById("PT").alt='ON';
+  document.getElementById("PT").title='ON';
+}
+
+$(document).ready(function(){
+  updateTemps();
+  updateStates();
+  updatePT();
+});
+</script>
