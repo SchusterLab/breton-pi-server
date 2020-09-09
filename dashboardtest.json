@@ -1,0 +1,620 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "limit": 100,
+        "name": "Annotations & Alerts",
+        "showIn": 0,
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "gnetId": null,
+  "graphTooltip": 1,
+  "id": 5,
+  "links": [],
+  "panels": [
+    {
+      "datasource": null,
+      "description": "Raspberry Pi Internal Temperatures",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "decimals": 1,
+          "mappings": [],
+          "max": 100,
+          "min": 20,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "semi-dark-green",
+                "value": null
+              },
+              {
+                "color": "#EAB839",
+                "value": 70
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "celsius"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 5,
+        "x": 0,
+        "y": 0
+      },
+      "id": 8,
+      "interval": "1m",
+      "maxDataPoints": 2,
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true
+      },
+      "pluginVersion": "7.0.0",
+      "targets": [
+        {
+          "groupBy": [],
+          "measurement": "pi_temps",
+          "orderByTime": "ASC",
+          "policy": "server_data",
+          "refId": "A",
+          "resultFormat": "table",
+          "select": [
+            [
+              {
+                "params": [
+                  "CPU"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "GPU"
+                ],
+                "type": "field"
+              }
+            ]
+          ],
+          "tags": []
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Pi Temps",
+      "type": "gauge"
+    },
+    {
+      "datasource": null,
+      "description": "Raspberry Pi Memory Used (MB)",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "mappings": [],
+          "max": 3999,
+          "min": 0,
+          "thresholds": {
+            "mode": "percentage",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "#EAB839",
+                "value": 50
+              },
+              {
+                "color": "red",
+                "value": 75
+              }
+            ]
+          },
+          "unit": "decmbytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 5,
+        "y": 0
+      },
+      "id": 10,
+      "interval": "1m",
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "values": false
+        }
+      },
+      "pluginVersion": "7.0.0",
+      "targets": [
+        {
+          "groupBy": [],
+          "measurement": "memory_MB",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "A",
+          "resultFormat": "table",
+          "select": [
+            [
+              {
+                "params": [
+                  "MEM"
+                ],
+                "type": "field"
+              }
+            ]
+          ],
+          "tags": []
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "MEM USE",
+      "type": "stat"
+    },
+    {
+      "datasource": "InfluxDB",
+      "description": "Last values pulled from temperature database",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "decimals": 2,
+          "mappings": [
+            {
+              "from": "",
+              "id": 0,
+              "operator": "",
+              "text": "",
+              "to": "",
+              "type": 1,
+              "value": ""
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "semi-dark-blue",
+                "value": null
+              },
+              {
+                "color": "light-blue",
+                "value": 3
+              },
+              {
+                "color": "light-green",
+                "value": 20
+              },
+              {
+                "color": "#EAB839",
+                "value": 30
+              },
+              {
+                "color": "semi-dark-orange",
+                "value": 40
+              },
+              {
+                "color": "light-red",
+                "value": 50
+              }
+            ]
+          },
+          "unit": "kelvin"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 16,
+        "x": 8,
+        "y": 0
+      },
+      "id": 6,
+      "interval": "",
+      "maxDataPoints": 2,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "vertical",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "values": false
+        }
+      },
+      "pluginVersion": "7.0.0",
+      "targets": [
+        {
+          "alias": "$tag_thermometer",
+          "groupBy": [
+            {
+              "params": [
+                "thermometer"
+              ],
+              "type": "tag"
+            }
+          ],
+          "measurement": "temp_K",
+          "orderByTime": "ASC",
+          "policy": "fridge_data",
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              }
+            ]
+          ],
+          "tags": []
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Current Temperatures",
+      "type": "stat"
+    },
+    {
+      "content": "<head>\n  <link rel=stylesheet type=text/css href=\"/flask/static/grafana.control.panel.css\">\n</head>\n\n<div id=\"state\">Automation State:</div>\n<button id=\"cycle\" class=\"toggle\">Cycle</button>\n<button id=\"warmup\" type=\"button\" id=\"warmup\" class=\"toggle\">Warmup</button>\n<button id=\"cooldown\" type=\"button\" id=\"cooldown\" class=\"toggle\">Cooldown</button>\n<button id=\"stop\" type=\"button\" id=\"stop\" class=\"toggle stop_btn\">Stop</button>\n<hr style=\"margin-top:2pt;margin-bottom:2pt\">\n\n<div>Advanced Automation</div>\n<input type=\"radio\" id=\"NONE\" name=\"advAuto\" value=\"NONE\" style=\"margin-left:4px\">\n  <label for=\"NONE\">None</label>\n<input type=\"radio\" id=\"RECYCLE\" name=\"advAuto\" value=\"RECYCLE\">\n  <label for=\"RECYCLE\">Auto-Recycle</label>\n<input type=\"radio\" id=\"THERMALIZE\" name=\"advAuto\" value=\"THERMALIZE\">\n  <label for=\"THERMALIZE\">Auto-Thermalize</label>\n<hr style=\"margin-top:2pt;margin-bottom:2pt\">\n\n<div>Heat Switches</div>\n<button type=\"button\" id=\"HS_1k_button\" title='TURN ON' class=\"toggle\">1K Switch</button>\n<button type=\"button\" id=\"HS_pump_button\" title='TURN ON' class=\"toggle\">Pump Switch</button>\n<div style=\"text-align:right;\"><a>Settings</a></div>\n<hr style=\"margin-top:2pt;margin-bottom:2pt\">\n\n\n<h5 style=\"text-align:center; font-weight: 500; line-height:18px\">Fridge Status</h5>\n<style>\n  .container {\n    padding: 2px 40px 10px 50px; margin: 0px; position: absolute;\n  }\n</style>\n<div class=\"container\">\n  <img id=\"diagram\" src=\"/flask/static/cycle_default.svg\" style=\"top:0px; left:20px; width:224px\">\n  <div id=\"1k_pot\" style=\"position:absolute; top:166px; left:10px;\" title=\"1k_pot\">--</div>\n  <div id=\"1k_plate\" style=\"position:absolute; top:166px; left:200px;\" title=\"1k_plate\">--</div>\n  <div id=\"4k_plate\" style=\"position:absolute; top:102px; left:4px;\" title=\"4k_plate\">--</div>\n  <div id=\"pump\" style=\"position:absolute; top:10px; left:216px;\" title=\"pump\">--</div>\n  <div id=\"pump_hs\" style=\"position:absolute; top:44px; left:260px;\" title=\"pump_hs\">--</div>\n  <img id=\"HS_pump_icon\" src=\"/flask/static/switch_off.svg\" style=\"position:absolute; top:62px; left:210px; width:38px; height:38px;\" alt=\"OFF\" title=\"OFF\">\n  <img id=\"HS_1k_icon\" src=\"/flask/static/switch_off.svg\" style=\"position:absolute; top:132px; left:140px; width:38px; height:38px;\" alt=\"OFF\" title=\"OFF\">\n  <div style=\"background: #262626; border:solid 1px white; border-radius:4px; width:82px; height:76px; position:absolute; top:1px; left:1px\">\n    <div style=\"position:absolute; top:2px; left:6px;\">Pulse Tube</div>\n    <img id=\"PT\" src=\"/flask/static/switch_off.svg\" style=\"position:absolute; top:24px; left:18px; width:38px; height:38px;\" alt=\"OFF\" title=\"OFF\">\n  </div>\n</div>\n\n\n\n<script src=\"https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js\"></script>\n<script>window.jQuery || document.write('<script src=\"/flask/static/jquery.js\">\\x3C/script>')</script>\n<script type=\"text/javascript\">\nvar subroutines = [\"NONE\",\"RECYCLE\",\"THERMALIZE\"];\nvar switchButtons = {\"1k_hs\":\"HS_1k_button\",\"pump_hs\":\"HS_pump_button\"};\nvar switchStates = {\"1k_hs\":false,\"pump_hs\":false};\n\nfunction setSwitchButton(name){\n  $.ajax({\n    method: 'POST',\n    url: \"/flask/set/switch\",\n    data: {\"name\":name,\"value\":!switchStates[name]}\n  }).done(function(data){\n    updateStates();\n  });\n}\nfunction setDivState(name){\n  $.ajax({\n    method: 'POST',\n    url: \"/flask/set/automation/state\",\n    data: {\"state\":name}\n  }).done(function(data){\n    updateStates();\n  });\n}\nfunction setSubroutine(name){\n  $.ajax({\n    method: 'POST',\n    url: \"/flask/set/automation/subroutine\",\n    data: {\"subroutine\":name}\n  }).done(function(data){\n    updateStates();\n  });\n}\n\n$(\"#HS_pump_button\").on(\"click\",function(){setSwitchButton(\"pump_hs\");});\n$(\"#HS_1k_button\").on(\"click\",function(){setSwitchButton(\"1k_hs\");});\n$(\"#cycle\").on(\"click\",function(){setDivState(\"START\");});\n$(\"#warmup\").on(\"click\",function(){setDivState(\"WARMUP\");});\n$(\"#cooldown\").on(\"click\",function(){setDivState(\"COOLDOWN\");});\n$(\"#stop\").on(\"click\",function(){setDivState(\"STOP\");});\n\n$(\"input[name=advAuto]:radio\").change(function(){setSubroutine($(this).val());});\n\n$(document).ready(function(){\n  updateButtonStates();\n});\n\nvar TempKeys = [\"1k_plate\", \"1k_pot\", \"4k_plate\", \"pump\", \"pump_hs\"];\nvar path = \"/flask/static/\";\nvar states = {\"WAIT FOR HS\":\"cycle_default.svg\",\"DESORB\":\"cycle_desorb.svg\",\"CONDENSE\":\"cycle_condense.svg\",\"PUMP\":\"cycle_pump.svg\",\"RUNNING\":\"cycle_running.svg\"};\nvar switchIcons = {\"1k_hs\":\"HS_1k_icon\",\"pump_hs\":\"HS_pump_icon\"};\nvar indicator_on = path + \"switch_on.svg\"\nvar indicator_off = path + \"switch_off.svg\"\nvar localRefreshInterval = 5000;\n\nfunction updateTemps(){\n  $.getJSON(\"/flask/get/temps\", function(result){\n    $.each(result, function(key, val){\n      if(TempKeys.includes(key)){\n        document.getElementById(key).innerHTML=val.toFixed(2)+\" K\";\n      }\n    });\n  });\n}\nfunction updateStates(){\n  $.getJSON(\"/flask/get/state\", function(result){\n    document.getElementById(\"state\").innerHTML=\"Automation State: \"+result.state+' ('+result.subroutine+')';\n    if(subroutines.includes(result.subroutine)){\n      document.getElementById(result.subroutine).checked = true;\n    }\n    var val = result.state;\n    if(val in states){\n      document.getElementById(\"diagram\").src=path+states[val];\n      document.getElementById(\"diagram\").alt=val;\n      document.getElementById(\"diagram\").title=val;\n    }else{\n      document.getElementById(\"diagram\").src=path+states[\"WAIT FOR HS\"];\n      document.getElementById(\"diagram\").alt=\"DEFAULT\";\n      document.getElementById(\"diagram\").title=\"DEFAULT\";\n    }\n  });\n  $.getJSON(\"/flask/get/switches\", function(result){\n    $.each(result, function(key, val){\n      if(key in switchIcons){\n        if(val){\n          document.getElementById(switchIcons[key]).src=indicator_on;\n          document.getElementById(switchIcons[key]).alt='ON';\n          document.getElementById(switchIcons[key]).title='ON';\n        }else{\n          document.getElementById(switchIcons[key]).src=indicator_off;\n          document.getElementById(switchIcons[key]).alt='OFF';\n          document.getElementById(switchIcons[key]).title='OFF';\n        }\n      }\n      if(key in switchButtons){\n        if(val){\n          document.getElementById(switchButtons[key]).className=\"toggle on_btn\";\n          document.getElementById(switchButtons[key]).title='TURN OFF';\n        }else{\n          document.getElementById(switchButtons[key]).className=\"toggle\";\n          document.getElementById(switchButtons[key]).title='TURN ON';\n        }\n        switchStates[key]=val;\n      }\n    });\n  });\n}\nfunction updatePT(){\n  document.getElementById(\"PT\").src=indicator_on;\n  document.getElementById(\"PT\").alt='ON';\n  document.getElementById(\"PT\").title='ON';\n}\n\n$(document).ready(function(){\n  updateTemps();\n  updateStates();\n  updatePT();\n});\n\nstatusInterval = window.setInterval(function() {\n  updateTemps();\n  updateStates();\n  updatePT();\n}, localRefreshInterval);\n\n</script>",
+      "datasource": null,
+      "description": "Direct control of fridge thread, routed through flask. \n**Make sure you know what you're doing!**",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 14,
+        "w": 6,
+        "x": 0,
+        "y": 4
+      },
+      "id": 4,
+      "mode": "html",
+      "targets": [
+        {
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
+          ],
+          "tags": []
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Fridge Control",
+      "type": "text"
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "InfluxDB",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 2,
+      "gridPos": {
+        "h": 10,
+        "w": 18,
+        "x": 6,
+        "y": 4
+      },
+      "hiddenSeries": false,
+      "id": 2,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "dataLinks": []
+      },
+      "percentage": false,
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "alias": "$tag_thermometer",
+          "groupBy": [
+            {
+              "params": [
+                "thermometer"
+              ],
+              "type": "tag"
+            }
+          ],
+          "hide": false,
+          "measurement": "temp_K",
+          "orderByTime": "ASC",
+          "policy": "fridge_data",
+          "query": "SELECT \"value\" FROM \"temp_K\" WHERE $timeFilter GROUP BY \"thermometer\"",
+          "rawQuery": false,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              }
+            ]
+          ],
+          "tags": []
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Fridge Temperatures",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "kelvin",
+          "label": "",
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "backgroundColor": "rgba(128,128,128,0.1)",
+      "colorMaps": [
+        {
+          "color": "#CCC",
+          "text": "N/A"
+        }
+      ],
+      "crosshairColor": "#8F070C",
+      "datasource": null,
+      "description": "",
+      "display": "timeline",
+      "expandFromQueryS": 0,
+      "extendLastValue": true,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 18,
+        "x": 6,
+        "y": 14
+      },
+      "highlightOnMouseover": true,
+      "id": 12,
+      "legendSortBy": "-ms",
+      "lineColor": "rgba(0,0,0,0.1)",
+      "metricNameColor": "#000000",
+      "rangeMaps": [
+        {
+          "from": "null",
+          "text": "N/A",
+          "to": "null"
+        }
+      ],
+      "rowHeight": 32,
+      "showLegend": true,
+      "showLegendNames": true,
+      "showLegendPercent": true,
+      "showLegendValues": true,
+      "showTimeAxis": true,
+      "targets": [
+        {
+          "groupBy": [],
+          "measurement": "state",
+          "orderByTime": "ASC",
+          "policy": "fridge_data",
+          "refId": "A",
+          "resultFormat": "table",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              }
+            ]
+          ],
+          "tags": []
+        }
+      ],
+      "textSize": 16,
+      "textSizeTime": 10,
+      "timeFrom": null,
+      "timeOptions": [
+        {
+          "name": "Years",
+          "value": "years"
+        },
+        {
+          "name": "Months",
+          "value": "months"
+        },
+        {
+          "name": "Weeks",
+          "value": "weeks"
+        },
+        {
+          "name": "Days",
+          "value": "days"
+        },
+        {
+          "name": "Hours",
+          "value": "hours"
+        },
+        {
+          "name": "Minutes",
+          "value": "minutes"
+        },
+        {
+          "name": "Seconds",
+          "value": "seconds"
+        },
+        {
+          "name": "Milliseconds",
+          "value": "milliseconds"
+        }
+      ],
+      "timePrecision": {
+        "name": "Minutes",
+        "value": "minutes"
+      },
+      "timeShift": null,
+      "timeTextColor": "#d8d9da",
+      "title": "Fridge State",
+      "type": "natel-discrete-panel",
+      "units": "short",
+      "useTimePrecision": false,
+      "valueMaps": [
+        {
+          "op": "=",
+          "text": "N/A",
+          "value": "null"
+        }
+      ],
+      "valueTextColor": "#000000",
+      "writeAllValues": false,
+      "writeLastValue": true,
+      "writeMetricNames": false
+    }
+  ],
+  "refresh": "5s",
+  "schemaVersion": 25,
+  "style": "dark",
+  "tags": [],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-30m",
+    "to": "now"
+  },
+  "timepicker": {
+    "hidden": false,
+    "nowDelay": "",
+    "refresh_intervals": [
+      "10s",
+      "30s",
+      "1m"
+    ]
+  },
+  "timezone": "",
+  "title": "Combined Dashboard",
+  "uid": "YSz1Yyigk",
+  "version": 8
+}

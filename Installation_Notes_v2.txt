@@ -1,0 +1,81 @@
+Influxdb + grafana on raspberry pi (ARMv7 32 bit)
+
+1. Install influxdB
+
+2. Install grafana ARMv7
+
+	>sudo service grafana-server start
+
+3. Test influxdB
+$influx
+	>show databases
+
+4. Add admin user
+$influx
+	>create user admin with password 'admin' with all privileges
+	>show users
+
+	user	admin
+	----	-----
+	admin	true
+
+5. Allow grafana unsanitized html for scripts
+To enable unsafe javascript execution in text panels enable the settings disable_sanitize_html under the section [panels] in your Grafana ini file.
+Make sure to uncomment for this to take effect
+
+Change:
+	;disable_sanitize_html=false
+To:
+	disable_sanitize_html=true
+Reboot service
+
+Note: for html served through Ajax, this isn't strictly necessary
+
+6. Log CPU temps with (https://hwwong168.wordpress.com/2015/10/12/raspberry-pi-2-gpu-and-cpu-temperature-logger-with-influxdb/) 
+Also Log memory with following additions:
+
+#!/bin/bash
+memTot=$(awk '/MemTotal/ { print $2 }' /proc/meminfo)
+memFree=$(awk '/MemFree/ { print $2 }' /proc/meminfo)
+memUsed=$(($memTot/1000-$memFree/1000))
+curl -i -XPOST 'http://localhost:8086/write?db=breton_test' --data-binary 'memory_MB MEM='$memUsed
+
+Note: the db should be updated accordingly. You can instead combine the two writes in the last line:
+
+curl -i -XPOST 'http://localhost:8086/write?db=breton_test' --data-binary 'temperature CPU='$CPU',GPU='$GPU'
+memory_MB MEM='$memUsed
+
+7. Grafana running on localhost:3000 can't load content from a flask server running at localhost:5000 (or smilar) due to Cross Origin Resource Sharing (CORS). This can be disabled via plugins in the browser, but better to have the flask app serve the html with a CORS enabled header. 
+
+Pip3 install -U flask-cors
+
+8. Install NGINX to work as a reverse-proxy, enabling grafana html to link to flask pages
+>sudo apt install nginx
+>sudo /etc/init.d/nginx start
+
+Check if successful on http://localhost
+
+>sudo systemctl enable nginx
+
+9. Configure nginx to route /grafana to grafana and /flask to flask
+
+-edit grafana.ini to include actual host path (http://localhost:80/grafana/) and enable subpath
+-edit nginx.conf
+-add custom site configuration (nginx-grafana.conf) to /etc/nginx/sites-enabled/
+
+Note: CORS issue persists when loading "http://10.0.0.252/flask" from machine on 10.0.0.252, but does not persist when loading "http://localhost/flask". Most likely localhost considers 10.0.0.252 an "external" IP address?
+
+10. Install firewall
+
+>sudo apt install ufw
+
+-Allow ssh, vnc, and 'Nginx Full'
+-Enable ufw
+-firewall will start blocking all other ports except for http requests, which now go through nginx
+
+11. Setup static ip address if not using dhcp
+
+12. Reconfigure all the paths in nginx and grafana to use static address (eg. 192.168.1.1:5000 not localhost:5000)
+
+12. Reconfigure grafana to enable anonymous access. set permissions to viewer
+
