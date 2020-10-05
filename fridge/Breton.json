@@ -15,8 +15,8 @@
   },
   "heater_labels": {"pump_heater": "Pump Heater", "1k_hs": "1K Heat Switch", "pump_hs": "Pump Heat Switch"},
   "heater_chs": {"pump_heater": 1, "1k_hs": 3, "pump_hs": 2},
-  "heatswitch_voltages": {"pump_hs": 10.0, "1k_hs": 6.0},
-  "heatswitch_currents": {"pump_hs": 0.004, "1k_hs": 0.004},
+  "heatswitch_voltages": {"pump_hs": 5.0, "1k_hs": 4.0},
+  "heatswitch_currents": {"pump_hs": 0.002, "1k_hs": 0.002},
   "cycle_parameters": {"desorb_current": 0.4, "desorb_voltage": 20.0, "desorb_time": 380, "desorb_temp": 40, "pump_hs_off_temp":12, "condense_time": 2900, "switch_time": 1200},
   "successful_cycle_threshold": 1.7,
   "logging_parameters": {"logging_interval": 2, "path": "S:\\_Breton\\logs\\", "file": ""}
