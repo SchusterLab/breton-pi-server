@@ -32,6 +32,7 @@ class FridgeThread(Thread):
         self.lock = lock
         self.fridge = fridge
         self.last_logupdate = time.time()
+        self.last_state_logupdate = time.time()
         self.cycle_finished_time = None
         
         self.logging_interval = self.fridge.logging_interval
@@ -42,7 +43,8 @@ class FridgeThread(Thread):
                            "CONDENSE": self.cycle_condense,
                            "PUMP": self.cycle_pump,
                            "RUNNING": self.cycle_run,
-                           "COOLDOWN": self.cooldown, "WARMUP": self.warmup}
+                           "COOLDOWN": self.cooldown,
+                           "WARMUP": self.warmup,"HEATING":self.warmup_heated}
 
         self.subroutines = {'NONE':None,'RECYCLE':'START','THERMALIZE':'COOLDOWN'}
     
@@ -52,7 +54,8 @@ class FridgeThread(Thread):
         self.fridge.set_heatswitch("pump_hs", False)
         self.fridge.set_heatswitch("1k_hs", True)
         print("Waiting for heat switches to switch")
-        self.fridge.automation_state = "WAIT FOR HS"
+        #self.fridge.automation_state = "WAIT FOR HS"
+        self.fridge.set_automation_state('WAIT FOR HS')
 
     def cycle_switches_desorb(self):
         if (time.time() - self.start_time > self.fridge.cycle_parameters["switch_time"]) or (
@@ -62,7 +65,7 @@ class FridgeThread(Thread):
             self.fridge.set_heater_current("pump_heater", self.fridge.cycle_parameters["desorb_current"])
             self.fridge.set_heater_voltage("pump_heater", self.fridge.cycle_parameters["desorb_voltage"])
             self.fridge.set_heater_output("pump_heater", True)
-            self.fridge.automation_state = "DESORB"
+            self.fridge.set_automation_state("DESORB")
 
     def cycle_desorb(self):
         if (self.fridge.get_temperature('pump') > self.fridge.cycle_parameters["desorb_temp"]) or (
@@ -70,7 +73,7 @@ class FridgeThread(Thread):
                     self.fridge.cycle_parameters["switch_time"]):
             print("Finished desorbing. Waiting for helium to condense.")
             self.desorb_finished_time = time.time()
-            self.fridge.automation_state = "CONDENSE"
+            self.fridge.set_automation_state("CONDENSE")
             self.fridge.set_heater_current("pump_heater", 0)
             self.fridge.set_heater_voltage("pump_heater", 0)
             self.fridge.set_heater_output("pump_heater", False)
@@ -80,13 +83,13 @@ class FridgeThread(Thread):
             print("Finished Condensing. Waiting for 1K HS to shut off.")
             self.fridge.set_heatswitch("1k_hs", False)
             self.condense_finished_time = time.time()
-            self.fridge.automation_state = "PUMP"
+            self.fridge.set_automation_state("PUMP")
 
     def cycle_pump(self):
         if time.time() - self.condense_finished_time > self.fridge.cycle_parameters["switch_time"]:
             print("Turning on the adsorption pump.")
             self.fridge.set_heatswitch("pump_hs", True)
-            self.fridge.automation_state = "RUNNING"
+            self.fridge.set_automation_state("RUNNING")
             self.cycle_finished_time = time.time()
 
     def cycle_run(self):
@@ -98,7 +101,7 @@ class FridgeThread(Thread):
                 print('cycle finished')
                 if self.fridge.subroutine_state != 'NONE':
                     print(self.fridge.subroutine_state)
-                    self.fridge.automation_state = self.subroutines[self.fridge.subroutine_state]
+                    self.fridge.set_automation_state(self.subroutines[self.fridge.subroutine_state])
                 else:
                     #cycle finished, but no automation specified
                     self.fridge.automation_state = None
@@ -111,10 +114,37 @@ class FridgeThread(Thread):
         #self.fridge.automation_state = None
 
     def warmup(self):
-        if not self.fridge.get_heatswitch_state("pump_hs"):
-            self.fridge.set_heatswitch("pump_hs", True)
-        if not self.fridge.get_heatswitch_state("1k_hs"):
-            self.fridge.set_heatswitch("1k_hs", True)    
+        #check that cycle has ended
+        if self.fridge.get_temperature('pump') > self.fridge.cfg['warmup_parameters']['Warm_temp']:
+            #finished actively warming, turn off automation
+            self.fridge.automation_state = None
+            self.fridge.set_heater_current("pump_heater", 0)
+            self.fridge.set_heater_voltage("pump_heater", 0)
+            self.fridge.set_heater_output("pump_heater", False)
+            
+    def warmup_heated(self):
+        #turn off compressor
+        
+        #turn heatswitch heaters to warmup values
+        self.fridge.switch_states['pump_hs'] = True
+        self.fridge.set_heater_voltage('pump_hs', self.fridge.cfg['warmup_parameters']['V_pump_hs'])
+        self.fridge.set_heater_current('pump_hs', self.fridge.cfg['warmup_parameters']['I_pump_hs'])
+        self.fridge.set_heater_output('pump_hs', True)
+        
+        time.sleep(0.1)
+        self.fridge.switch_states['1k_hs'] = True
+        self.fridge.set_heater_voltage('1k_hs', self.fridge.cfg['warmup_parameters']['V_1k_hs'])
+        self.fridge.set_heater_current('1k_hs', self.fridge.cfg['warmup_parameters']['I_1k_hs'])
+        
+        time.sleep(0.1)
+        self.fridge.set_heater_output('1k_hs', True)
+        self.fridge.set_heater_voltage('pump_heater', self.fridge.cfg['warmup_parameters']['V_pump'])
+        self.fridge.set_heater_current('pump_heater', self.fridge.cfg['warmup_parameters']['I_pump'])
+        self.fridge.set_heater_output('pump_heater', True)
+        
+        #start monitoring temperature
+        self.fridge.set_automation_state("WARMUP")
+        
     
     def run(self):
         try:
@@ -122,7 +152,14 @@ class FridgeThread(Thread):
                 if self.fridge.automation_state is not None:
                     self.state_dict[self.fridge.automation_state]()
                 if time.time() - self.last_logupdate > self.logging_interval:
-                    self.fridge.update_log(logStateOnly=self.fridge.logStateOnly)
+                    #time to update log
+                    #check if state changed or 10 log updates have passed
+                    if self.fridge.state_changed_flag or time.time() - self.last_state_logupdate > 10*self.logging_interval:
+                        self.fridge.update_log(logStateOnly=self.fridge.logStateOnly,logAutomationState=True)
+                        self.fridge.state_changed_flag=False
+                        self.last_state_logupdate = time.time()
+                    else:
+                        self.fridge.update_log(logStateOnly=self.fridge.logStateOnly)
                     self.last_logupdate = time.time()
                     
                 time.sleep(0.5)
@@ -142,6 +179,8 @@ class SlabFridge():
         
         self.automation_state=None
         self.subroutine_state='NONE'
+        
+        self.state_changed_flag = False
         
         with open(configfile, 'r') as fid:
             cfg = json.loads(fid.read())
@@ -204,42 +243,18 @@ class SlabFridge():
             if (self.get_temperature('1k_pot') < self.cfg['successful_cycle_threshold']) and (self.get_temperature('1k_pot') > 0):
                 print('Cycle hold in progress. Resuming automation...')
                 self.automation_state="RUNNING"
-        
-        
-    
-    def loadData(self,logname='fridge/sample_log.h5'):
-        # Import template file data
-        try:
-            with File(logname,'r') as f:
-                self.TempKeys = list(f.keys())
-                print('Temperatures Logged:',self.TempKeys)
-                for k in self.TempKeys:
-                    self.TemplateData.append(np.array(f.get(k)))
-        except OSError:
-            print('file not found')
+
             
-    def update_log(self,logStateOnly=False):
+    def update_log(self,logStateOnly=False,logAutomationState=False):
         self.update_temperatures()
         self.update_pressure()
         if self.useInflux:
-            logToInflux(self.get_temperatures(),client=self.client,Pressure=self.get_pressure())
+            if logAutomationState and self.automation_state is not None:
+                logToInflux(self.get_temperatures(),client=self.client,State = self.automation_state,Pressure=self.get_pressure())
+            else:
+                logToInflux(self.get_temperatures(),client=self.client,Pressure=self.get_pressure())
         #write to console
         #LogToConsole(self.TempKeys, [t[self.index] for t in self.TemplateData],State=self.stateChanges.get(self.index,None),logStateOnly=logStateOnly)
-        '''
-        if self.stateChanges.get(self.index,None) is not None:
-            self.automation_state = self.stateChanges.get(self.index,None)
-            self.switch_states = self.switchStates.get(self.automation_state)
-        self.index = (self.index+1) % self.looplen
-        '''
-    
-    def cooldown(self):
-        self.automation_state = "Cooldown"
-
-    def warmup(self):
-        self.automation_state = "Warmup"
-
-    def cycle(self):
-        self.automation_state = "Cycle: Start"
 
     def stop_automation(self):
         self.automation_state = None
@@ -251,6 +266,7 @@ class SlabFridge():
     def set_automation_state(self,state):
         if state in self.automation_thread.state_dict.keys():
             self.automation_state = state
+            self.state_changed_flag = True
         
     def get_automation_state(self):
         return self.automation_state

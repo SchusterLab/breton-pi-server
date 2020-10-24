@@ -7,7 +7,7 @@ import time
 
 client = None
 
-def setupDatabase(host = 'localhost',port = 8086,USER = 'root',PASSWORD = 'root',DBNAME = 'breton_test'):
+def setupDatabase(host = 'localhost',port = 8086,USER = 'slab',PASSWORD = 'slab',DBNAME = 'breton'):
     from influxdb import InfluxDBClient
     from influxdb.client import InfluxDBClientError
     from influxdb.client import InfluxDBServerError
@@ -19,14 +19,10 @@ def setupDatabase(host = 'localhost',port = 8086,USER = 'root',PASSWORD = 'root'
         print('Error: cannot connect to InfluxDb!')
 
     print("Connecting to database: " + DBNAME)
-    
-    print(client.get_list_retention_policies(DBNAME))
+
     # Alter retention policies
     rp_default = 'server_data'
-    #client.create_retention_policy(rp_default, '1d', 2, default=True)
     rp_fdata = 'fridge_data'
-    #client.create_retention_policy(rp_fdata, '8w', 2, shard_duration='1d',default=False)
-    #client.create_retention_policy(rp_fdata, '3d', 2, default=False)
     
     return client
 
@@ -49,9 +45,9 @@ def logToInflux(TempDict,client=None,State=None,Pressure=None):
             }})
     if Pressure is not None:
         json_body.append({
-            "measurement":"pressure_He",
+            "measurement":"pressure",
             "tags":{
-                "location":"P1"
+                "gauge":"P_he"
                 },
             "fields":{
                 "value":float(Pressure)

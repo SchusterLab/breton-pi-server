@@ -10,5 +10,5 @@ memTot=$(awk '/MemTotal/ { print $2 }' /proc/meminfo)
 memFree=$(awk '/MemFree/ { print $2 }' /proc/meminfo)
 memUsed=$(($memTot/1000-$memFree/1000))
  
-curl -i -XPOST 'http://localhost:8086/write?db=breton_test' --data-binary 'pi_temps CPU='$CPU',GPU='$GPU'
+curl -i -XPOST 'http://localhost:8086/write?db=breton' --data-binary 'pi_temps CPU='$CPU',GPU='$GPU'
 memory_MB MEM='$memUsed
