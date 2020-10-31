@@ -44,14 +44,29 @@ def logToInflux(TempDict,client=None,State=None,Pressure=None):
                 "value":State
             }})
     if Pressure is not None:
+        #assume pressure is in the form of a list of dictionaries
+        #values and gauges are hard baked for now
+        #TODO make the pressure section general
         json_body.append({
             "measurement":"pressure",
             "tags":{
-                "gauge":"P_he"
+                "gauge":"P_he",
+                "units":Pressure[0]["units"]
                 },
             "fields":{
-                "value":float(Pressure)
+                "value":float(Pressure[0]["pressure"]),
+                "voltage":float(Pressure[0]["voltage"])
             }})
+        json_body.append({
+                    "measurement":"pressure",
+                    "tags":{
+                        "gauge":"P_ovc",
+                        "units":Pressure[1]["units"]
+                        },
+                    "fields":{
+                        "value":float(Pressure[1]["pressure"]),
+                        "voltage":float(Pressure[1]["voltage"])
+                    }})
     if client is None:
         setupDatabase()
     else:

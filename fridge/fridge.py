@@ -15,7 +15,7 @@ from fridge.influxLog import setupDatabase, logToInflux
 from instruments.cryocon import Cryocon
 from instruments.bkpowersupply import BKPowerSupply
 from instruments.compressor import CP2800
-from instruments.pressure import PX209
+from instruments.pressure import ADS1115
 
 def LogToConsole(Temps,State=None,Pressure=None,logStateOnly=False):
     #print data to console, if logging isn't available
@@ -203,7 +203,7 @@ class SlabFridge():
             print('Could not load compressor')
             print(e)
         try:
-            self.pressure = PX209(name='pressure')
+            self.pressure = ADS1115()
         except Exception as e:
             self.pressure = None
             print('Could not connect to pressure guage')
@@ -250,9 +250,9 @@ class SlabFridge():
         self.update_pressure()
         if self.useInflux:
             if logAutomationState and self.automation_state is not None:
-                logToInflux(self.get_temperatures(),client=self.client,State = self.automation_state,Pressure=self.get_pressure())
+                logToInflux(self.get_temperatures(),client=self.client,State = self.automation_state,Pressure=self.get_pressure_data())
             else:
-                logToInflux(self.get_temperatures(),client=self.client,Pressure=self.get_pressure())
+                logToInflux(self.get_temperatures(),client=self.client,Pressure=self.get_pressure_data())
         #write to console
         #LogToConsole(self.TempKeys, [t[self.index] for t in self.TemplateData],State=self.stateChanges.get(self.index,None),logStateOnly=logStateOnly)
 
@@ -339,11 +339,19 @@ class SlabFridge():
         
     def get_pressure(self):
         if self.current_pressure is not None:
+            return [d['pressure'] for d in self.current_pressure]
+        else:
+            return None
+
+    def get_pressure_data(self):
+        if self.current_pressure is not None:
             return self.current_pressure
+        else:
+            return None
     
     def update_pressure(self):
         if self.pressure is not None:
-            self.current_pressure = self.pressure.get_pressure()
+            self.current_pressure = self.pressure.get_all_data()
 
     def set_heater_output(self, name, state):
         time.sleep(0.1)
