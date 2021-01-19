@@ -79,12 +79,18 @@ class TPG251(ADSinstrument):
         super().set_units(units)
         #assume Pmin =10^-d
         if units is 'mBar':
-            self.Pmin = pow(10,-11.33)
+            #self.Pmin = pow(10,-11.33)
+            #calibrated to match gauge reading:
+            self.Pmin = pow(10,-12.07643411)
         elif units is 'Bar':
-            self.Pmin = pow(10,-14.33)
+            #self.Pmin = pow(10,-14.33)
+            #calibrated to match gauge reading:
+            self.Pmin = pow(10,-15.07643411)
 
     def calc_pressure(self,v_scaled):
-        pressure = pow(10,1.667*max(min(v_scaled*10,8.596289),1.817020))*self.Pmin
+        #pressure = pow(10,1.667*max(min(v_scaled*10,8.596289),1.817020))*self.Pmin
+        #calibrated to match gauge reading:
+        pressure = pow(10,1.667*max(min(v_scaled*10.6115207158,8.596289),1.817020))*self.Pmin
         if self.sci_format:
             return format(pressure,'4.6e')
         else:

@@ -98,14 +98,11 @@ function setSubroutine(name){
 $(document).ready(function(){
   updateStates();
 });
-setInterval(function() {
-  updateStates();
-}, refreshInterval);
 
 $("#HS_pump").on("click",function(){setSwitch("pump_hs");});
 $("#HS_1k").on("click",function(){setSwitch("1k_hs");});
 $("#cycle").on("click",function(){setState("START");});
-$("#warmup").on("click",function(){setState("WARMUP");});
+$("#warmup").on("click",function(){setState("HEATING");});
 $("#cooldown").on("click",function(){setState("COOLDOWN");});
 $("#stop").on("click",function(){setState("STOP");});
 

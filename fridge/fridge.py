@@ -195,7 +195,7 @@ class SlabFridge():
             self.__dict__[inst] = getattr(slab.instruments, info['class'])(name=inst, address=info['address'])
         '''
         # Import instruments
-        self.ps = BKPowerSupply(name='bkp')
+        self.ps = BKPowerSupply(name='bkp') #note: during power outage BKP will be powered off
         self.monitor = Cryocon(name='monitor')
         try:
             self.compressor = CP2800(name='compressor')
