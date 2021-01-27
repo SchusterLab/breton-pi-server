@@ -5,6 +5,15 @@ from flask import jsonify
 from flask import request
 from flask import make_response
 
+#   --- Setup logging config ---
+
+import logging
+import logging.config
+
+logging.config.fileConfig('logging.conf')
+
+#   --- Setup flask routing ---
+
 fridge = None
 
 @app.route("/get/temps")
@@ -25,7 +34,7 @@ def set_switch():
     sw_name = request.form.get('name')
     value = request.form.get('value')=='true'
     fridge.set_heatswitch(sw_name,value)
-    print('Setting',sw_name,' to: ',value)
+    logging.info('Setting %s to: %s',sw_name,value)
     return 'set'
 
 @app.route("/set/automation/subroutine",methods=['POST'])
@@ -42,15 +51,17 @@ def set_state():
     else:
         fridge.set_automation_state(state)
     return 'set'
+
+#   --- main ---
         
 if __name__ == "__main__":
-    print('Starting automation thread')
+    logging.info('Starting automation thread')
     fridge = SlabFridge(configfile="fridge/Breton.json",useInflux=True,logStateOnly=True)
     automation_thread = FridgeThread(fridge,False)
     automation_thread.start()
     fridge.automation_thread = automation_thread
     
-    print('Starting app.')
+    logging.info('Starting app.')
     from waitress import serve
     serve(app, host="0.0.0.0", port=5000)
     #app.debug=True

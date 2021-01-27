@@ -4,6 +4,7 @@ Created on Fri May 22 14:18:11 2020
 @author: sasha
 """
 import time
+import logging
 
 client = None
 
@@ -16,13 +17,14 @@ def setupDatabase(host = 'localhost',port = 8086,USER = 'slab',PASSWORD = 'slab'
     try:
         client = InfluxDBClient(host, port, USER, PASSWORD, DBNAME)
     except InfluxDBClientError:
-        print('Error: cannot connect to InfluxDb!')
+        logging.error('Error: cannot connect to InfluxDb!')
+        return None
 
-    print("Connecting to database: " + DBNAME)
+    logging.info("Connecting to database: " + DBNAME)
 
     # Alter retention policies
-    rp_default = 'server_data'
-    rp_fdata = 'fridge_data'
+    #rp_default = 'server_data'
+    #rp_fdata = 'fridge_data'
     
     return client
 
@@ -71,7 +73,7 @@ def logToInflux(TempDict,client=None,State=None,Pressure=None):
         setupDatabase()
     else:
         try:
-            result = client.write_points(json_body,retention_policy='fridge_data')
-        except Exception as e:
-            print(e)
-            print(time.strftime("%D-%H:%M:%S"),'Error Writing points!')
+            client.write_points(json_body,retention_policy='fridge_data')
+        except Exception:
+            #print(e)
+            logging.exception('Error Writing points!')

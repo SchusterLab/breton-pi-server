@@ -9,6 +9,7 @@ from h5py import File
 import numpy as np
 import time
 import json
+import logging
 
 from fridge.influxLog import setupDatabase, logToInflux
 
@@ -20,9 +21,9 @@ from instruments.pressure import ADS1115
 def LogToConsole(Temps,State=None,Pressure=None,logStateOnly=False):
     #print data to console, if logging isn't available
     if not logStateOnly:
-        print(time.strftime('%m-%d %H:%M:%S::'),Temps)
+        logging.debug(Temps)
     if State is not None:
-        print(time.strftime('%m-%d %H:%M:%S::'),State)
+        logging.debug(State)
 
 
 class FridgeThread(Thread):
@@ -49,18 +50,18 @@ class FridgeThread(Thread):
         self.subroutines = {'NONE':None,'RECYCLE':'START','THERMALIZE':'COOLDOWN'}
     
     def cycle_start(self):
-        print("Started Cycling fridge.")
+        logging.info("Started Cycling fridge.")
         self.start_time = time.time()
         self.fridge.set_heatswitch("pump_hs", False)
         self.fridge.set_heatswitch("1k_hs", True)
-        print("Waiting for heat switches to switch")
+        logging.info("Waiting for heat switches to switch")
         #self.fridge.automation_state = "WAIT FOR HS"
         self.fridge.set_automation_state('WAIT FOR HS')
 
     def cycle_switches_desorb(self):
         if (time.time() - self.start_time > self.fridge.cycle_parameters["switch_time"]) or (
                     self.fridge.get_temperature('pump_hs') < self.fridge.cycle_parameters["pump_hs_off_temp"]):
-            print("Desorbing pump at : %f A @ %f V" % (
+            logging.info("Desorbing pump at : %f A @ %f V" % (
                 self.fridge.cycle_parameters["desorb_current"], self.fridge.cycle_parameters["desorb_voltage"]))
             self.fridge.set_heater_current("pump_heater", self.fridge.cycle_parameters["desorb_current"])
             self.fridge.set_heater_voltage("pump_heater", self.fridge.cycle_parameters["desorb_voltage"])
@@ -71,7 +72,7 @@ class FridgeThread(Thread):
         if (self.fridge.get_temperature('pump') > self.fridge.cycle_parameters["desorb_temp"]) or (
                         time.time() - self.start_time > self.fridge.cycle_parameters["desorb_time"] +
                     self.fridge.cycle_parameters["switch_time"]):
-            print("Finished desorbing. Waiting for helium to condense.")
+            logging.info("Finished desorbing. Waiting for helium to condense.")
             self.desorb_finished_time = time.time()
             self.fridge.set_automation_state("CONDENSE")
             self.fridge.set_heater_current("pump_heater", 0)
@@ -80,14 +81,14 @@ class FridgeThread(Thread):
 
     def cycle_condense(self):
         if time.time() - self.desorb_finished_time > self.fridge.cycle_parameters["condense_time"]:
-            print("Finished Condensing. Waiting for 1K HS to shut off.")
+            logging.info("Finished Condensing. Waiting for 1K HS to shut off.")
             self.fridge.set_heatswitch("1k_hs", False)
             self.condense_finished_time = time.time()
             self.fridge.set_automation_state("PUMP")
 
     def cycle_pump(self):
         if time.time() - self.condense_finished_time > self.fridge.cycle_parameters["switch_time"]:
-            print("Turning on the adsorption pump.")
+            logging.info("Turning on the adsorption pump.")
             self.fridge.set_heatswitch("pump_hs", True)
             self.fridge.set_automation_state("RUNNING")
             self.cycle_finished_time = time.time()
@@ -98,9 +99,9 @@ class FridgeThread(Thread):
             #check that cycle has ended
             if self.fridge.get_temperature('1k_pot') > self.fridge.cfg['successful_cycle_threshold']:
                 #cycle finished
-                print('cycle finished')
+                logging.info('cycle finished')
                 if self.fridge.subroutine_state != 'NONE':
-                    print(self.fridge.subroutine_state)
+                    logging.info(self.fridge.subroutine_state)
                     self.fridge.set_automation_state(self.subroutines[self.fridge.subroutine_state])
                 else:
                     #cycle finished, but no automation specified
@@ -165,7 +166,7 @@ class FridgeThread(Thread):
                 time.sleep(0.5)
                 
         except KeyboardInterrupt:
-            print('Keyboard Interrupt (Ctrl-C)')
+            logging.warn('Keyboard Interrupt (Ctrl-C)')
 
 
 class SlabFridge():
@@ -199,15 +200,14 @@ class SlabFridge():
         self.monitor = Cryocon(name='monitor')
         try:
             self.compressor = CP2800(name='compressor')
-        except Exception as e:
-            print('Could not load compressor')
-            print(e)
+        except Exception:
+            self.compressor = None
+            logging.warn('Could not load compressor')
         try:
             self.pressure = ADS1115()
-        except Exception as e:
+        except Exception:
             self.pressure = None
-            print('Could not connect to pressure guage')
-            print(e)
+            logging.warn('Could not connect to pressure guage')
             
         #current switch state storage    
         self.switch_states = {'pump_hs':False,'1k_hs':False}
@@ -220,10 +220,10 @@ class SlabFridge():
         #current pressure
         self.current_pressure = None
         
-        print('cold start ? ', self.cfg['forceResetOnStart'])
+        logging.debug('cold start ? %s', self.cfg['forceResetOnStart'])
         if self.cfg['forceResetOnStart']:
             #force reset all channels
-            print('resetting channels')
+            logging.info('resetting channels')
             
             for heater, ch in self.cfg['heater_chs'].items():
                 self.set_heater_current(heater, 0)
@@ -236,12 +236,12 @@ class SlabFridge():
         for hs in list(self.cfg["heatswitch_voltages"].keys()):
             #self.set_heatswitch(hs, False)
             #check the current heater status
-            print(hs,self.get_heater_voltage(hs)>0.5)
+            logging.debug('%s is %s',hs,self.get_heater_voltage(hs)>0.5)
             self.switch_states[hs] = self.get_heater_voltage(hs)>0.5
         
         if not self.cfg['forceResetOnStart']:
             if (self.get_temperature('1k_pot') < self.cfg['successful_cycle_threshold']) and (self.get_temperature('1k_pot') > 0):
-                print('Cycle hold in progress. Resuming automation...')
+                logging.info('Cycle hold in progress. Resuming automation...')
                 self.automation_state="RUNNING"
 
             
@@ -277,7 +277,7 @@ class SlabFridge():
 
     def set_subroutine_state(self,state):
         if state in self.automation_thread.subroutines.keys():
-            print('automation subroutine set to: ',state)
+            logging.info('automation subroutine set to: %s',state)
             self.subroutine_state = state
 
     def set_heatswitch(self, name, state=False):
