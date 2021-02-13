@@ -4,6 +4,10 @@ from app import app
 from flask import jsonify
 from flask import request
 from flask import make_response
+from flask import send_file
+from flask import abort
+
+import os
 
 #   --- Setup logging config ---
 
@@ -28,13 +32,36 @@ def get_state():
 def get_switches():
     return jsonify(fridge.get_heatswitch_states())
 
+@app.route("/get/status/compressor")
+def get_status_compressor():
+    return 'not setup yet'
+
+@app.route("/get/status/bk")
+def get_status_bk():
+    #TODO: make this a threaded call, or cache a local copy and update
+    return jsonify(voltages=fridge.ps.measure_voltages())
+
+@app.route("/get/logs")
+def log_listing():
+    BASE_DIR = '/var/log/fridge'
+    path = os.path.join(BASE_DIR,'fridge.log')
+
+    if not os.path.exists(path):
+        return abort(404)
+
+    if os.path.isfile(path):
+        return send_file(path)
+    else:
+        return os.listdir(path)
+
+
 @app.route("/set/switch",methods=['POST'])
 def set_switch():
     #{'name':'1k_hs','value':'False'}
     sw_name = request.form.get('name')
     value = request.form.get('value')=='true'
     fridge.set_heatswitch(sw_name,value)
-    logging.info('Setting %s to: %s',sw_name,value)
+    logging.info('%s setting %s to: %s',request.host_url,sw_name,value)
     return 'set'
 
 @app.route("/set/automation/subroutine",methods=['POST'])

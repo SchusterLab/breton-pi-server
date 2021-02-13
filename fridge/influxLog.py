@@ -76,4 +76,4 @@ def logToInflux(TempDict,client=None,State=None,Pressure=None):
             client.write_points(json_body,retention_policy='fridge_data')
         except Exception:
             #print(e)
-            logging.exception('Error Writing points!')
+            logging.error('Error Writing points!')

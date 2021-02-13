@@ -37,6 +37,11 @@ class BKPowerSupply(SerialInstrument):
         ans=self.query('APP:VOLT?\n')
         voltages=[float (s.strip()) for s in ans.split(',')]
         return voltages   
+
+    def measure_voltages(self):
+        ans=self.query('MEAS:ALL?\n')
+        voltages=[float(s.strip()) for s in ans.split(',')]
+        return voltages
         
     def set_currents(self,ch1,ch2,ch3):
         self.write( 'APP:CURR %f,%f,%f\n' %(ch1,ch2,ch3))
@@ -44,6 +49,11 @@ class BKPowerSupply(SerialInstrument):
     def get_currents(self):
         ans=self.query('APP:CURR?\n')
         currents=[float (s.strip()) for s in ans.split(',')]
+        return currents
+
+    def measure_currents(self):
+        ans=self.query('MEAS:CURR:ALL?\n')
+        currents=[float(s.strip()) for s in ans.split(',')]
         return currents     
 
     def get_voltage(self,channel=None):
