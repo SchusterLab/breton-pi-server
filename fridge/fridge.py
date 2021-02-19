@@ -27,11 +27,11 @@ def LogToConsole(Temps,State=None,Pressure=None,logStateOnly=False):
 
 
 class FridgeThread(Thread):
-    def __init__(self,fridge,lock):
+    def __init__(self,fridge):
         Thread.__init__(self)
-        self.exit = False
-        self.lock = lock
         self.fridge = fridge
+        self.exit = False
+        
         self.last_logupdate = time.time()
         self.last_state_logupdate = time.time()
         self.cycle_finished_time = None
@@ -45,7 +45,8 @@ class FridgeThread(Thread):
                            "PUMP": self.cycle_pump,
                            "RUNNING": self.cycle_run,
                            "COOLDOWN": self.cooldown,
-                           "WARMUP": self.warmup,"HEATING":self.warmup_heated}
+                           "WARMUP": self.warmup,
+                           "HEATING":self.warmup_heated}
 
         self.subroutines = {'NONE':None,'RECYCLE':'START','THERMALIZE':'COOLDOWN'}
     
@@ -97,7 +98,7 @@ class FridgeThread(Thread):
         #wait for 1k pot thermalization
         if (self.cycle_finished_time is None) or (time.time() - self.cycle_finished_time > self.fridge.cycle_parameters["switch_time"]):
             #check that cycle has ended
-            if self.fridge.get_temperature('1k_pot') > self.fridge.cfg['successful_cycle_threshold']:
+            if self.fridge.get_temperature('1k_pot') > self.fridge.cfg.cycle_parameters['successful_cycle_threshold']:
                 #cycle finished
                 logging.info('cycle finished')
                 if self.fridge.subroutine_state != 'NONE':
@@ -170,7 +171,8 @@ class FridgeThread(Thread):
 
 
 class SlabFridge():
-    def __init__(self,configfile,useInflux=False,logStateOnly=False,lock=False):
+    def __init__(self,configfile,useInflux=False,logStateOnly=False):
+        self.lock = Lock()
         self.useInflux = useInflux
         
         if self.useInflux:
@@ -183,6 +185,7 @@ class SlabFridge():
         
         self.state_changed_flag = False
         
+        #read config file
         with open(configfile, 'r') as fid:
             cfg = json.loads(fid.read())
 
@@ -240,7 +243,7 @@ class SlabFridge():
             self.switch_states[hs] = self.get_heater_voltage(hs)>0.5
         
         if not self.cfg['forceResetOnStart']:
-            if (self.get_temperature('1k_pot') < self.cfg['successful_cycle_threshold']) and (self.get_temperature('1k_pot') > 0):
+            if (self.get_temperature('1k_pot') < self.cfg.cycle_parameters['successful_cycle_threshold']) and (self.get_temperature('1k_pot') > 0):
                 logging.info('Cycle hold in progress. Resuming automation...')
                 self.automation_state="RUNNING"
 
@@ -333,8 +336,8 @@ class SlabFridge():
         try:
             temp = self.monitor.get_temp(self.cfg['thermometers'][name])
         finally:
-            #self.lock.release()
             pass
+            #self.lock.release()
         self.temperatures[name]=temp
         
     def get_pressure(self):
@@ -351,7 +354,9 @@ class SlabFridge():
     
     def update_pressure(self):
         if self.pressure is not None:
+            #self.lock.acquire()
             self.current_pressure = self.pressure.get_all_data()
+            #self.lock.release()
 
     def set_heater_output(self, name, state):
         time.sleep(0.1)

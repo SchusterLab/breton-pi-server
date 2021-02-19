@@ -14,7 +14,10 @@ import os
 import logging
 import logging.config
 
-logging.config.fileConfig('logging.conf')
+try:
+    logging.config.fileConfig('logging.conf')
+except:
+    print('Unable to create logfile!')
 
 #   --- Setup flask routing ---
 
@@ -84,7 +87,7 @@ def set_state():
 if __name__ == "__main__":
     logging.info('Starting automation thread')
     fridge = SlabFridge(configfile="fridge/Breton.json",useInflux=True,logStateOnly=True)
-    automation_thread = FridgeThread(fridge,False)
+    automation_thread = FridgeThread(fridge)
     automation_thread.start()
     fridge.automation_thread = automation_thread
     
