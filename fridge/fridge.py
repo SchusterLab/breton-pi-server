@@ -243,7 +243,7 @@ class SlabFridge():
             self.switch_states[hs] = self.get_heater_voltage(hs)>0.5
         
         if not self.cfg['forceResetOnStart']:
-            if (self.get_temperature('1k_pot') < self.cfg.cycle_parameters['successful_cycle_threshold']) and (self.get_temperature('1k_pot') > 0):
+            if (self.get_temperature('1k_pot') < self.cycle_parameters['successful_cycle_threshold']) and (self.get_temperature('1k_pot') > 0):
                 logging.info('Cycle hold in progress. Resuming automation...')
                 self.automation_state="RUNNING"
 
