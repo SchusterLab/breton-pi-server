@@ -419,6 +419,7 @@ class SlabFridge():
     
     def update_compressor_status(self):
         #note: this function is slow. Best to run this threaded
+        print('updating compressor')
         self.compressor_status = self.compressor.get_compressor_status()
         
     def set_compressor_status(self,state=False,override=False):
