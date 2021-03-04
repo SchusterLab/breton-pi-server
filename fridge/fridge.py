@@ -157,7 +157,7 @@ class FridgeThread(Thread):
         
     def rough_pump(self):
         #check if below interlock threshold
-        last_pressure = self.fridge.get_pressure()
+        last_pressure = self.fridge.get_pressure()*1000
         if last_pressure is not None:
             if last_pressure < self.fridge.cfg['vacuum_parameters']['interlock_pressure']:
                 self.fridge.set_automation_state('FINE PUMP')
@@ -168,10 +168,11 @@ class FridgeThread(Thread):
     
     def fine_pump(self):
         #check if below fine pump threshold or enough time has passed
-        last_pressure = self.fridge.get_pressure()
+        last_pressure = self.fridge.get_pressure()*1000
         if last_pressure is not None:
             if (last_pressure < self.fridge.cfg['vacuum_parameters']['high_vac_pressure']) or (time.time() - self.pump_start_time > 3600*self.fridge.cfg['vacuum_parameters']['max_pump_time_h']):
-                #self.fridge.set_compressor(True)
+                logging.info('Pressure is %s. Turning compressor on and beginning cooldown.',format(last_pressure,'1.1e'))
+                self.fridge.set_compressor(True)
                 self.fridge.set_automation_state('COOLDOWN')
         else:
             logging.warn('No pressure gauge found, aborting pumping!')
@@ -428,11 +429,14 @@ class SlabFridge():
                 #compressor ON requested
                 if self.get_pressure()*1000 < self.cfg['vacuum_parameters']['interlock_pressure'] or override:
                     logging.info('Turning compressor ON. Pressure is %s',format(self.get_pressure()*1000,'1.1e'))
+                    self.compressor.start_compressor()
                 else:
                     logging.warn('Attempted to turn ON compressor when pressure was %s',format(self.get_pressure()*1000,'1.1e'))
             else:
                 #compressor OFF requested
                 logging.info('Turning compressor OFF')
+                self.compressor.stop_compressor()
+                
         else:
             logging.info('Compressor already %s',self.compressor_status)
             
