@@ -27,6 +27,11 @@ fridge = None
 def get_temps():
     return jsonify(fridge.get_temperatures())
 
+@app.route("/get/pressure")
+def get_pressure():
+    #TODO implement url aruments to select which pressure gauge
+    return jsonify(fridge.get_pressure_data())
+
 @app.route("/get/state")
 def get_state():
     return jsonify(state=fridge.get_automation_state(),subroutine=fridge.get_subroutine_state())

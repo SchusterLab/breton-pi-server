@@ -59,13 +59,13 @@ class PX209(ADSinstrument):
     
     def set_units(self,units='psi'):
         super().set_units(units)
-        if units is 'psi':
+        if units == 'psi':
             self.Pmax = (135.0+14.7346)
             self.Pmin = -14.7346
-        elif units is 'barRel':
+        elif units == 'barRel':
             self.Pmax = (9.30792+1.01952)
             self.Pmin = -1.01952
-        elif units is 'barAbs':
+        elif units == 'barAbs':
             self.Pmax = (9.30792+1.01952)
             self.Pmin = 0.0
 
@@ -78,11 +78,11 @@ class TPG251(ADSinstrument):
     def set_units(self,units='mBar'):
         super().set_units(units)
         #assume Pmin =10^-d
-        if units is 'mBar':
+        if units == 'mBar':
             #self.Pmin = pow(10,-11.33)
             #calibrated to match gauge reading:
             self.Pmin = pow(10,-12.07643411)
-        elif units is 'Bar':
+        elif units == 'Bar':
             #self.Pmin = pow(10,-14.33)
             #calibrated to match gauge reading:
             self.Pmin = pow(10,-15.07643411)
@@ -92,6 +92,7 @@ class TPG251(ADSinstrument):
         #calibrated to match gauge reading:
         pressure = pow(10,1.667*max(min(v_scaled*10.6115207158,8.596289),1.817020))*self.Pmin
         if self.sci_format:
+            #WARNING this returns a string not a float!
             return format(pressure,'4.6e')
         else:
             return pressure
