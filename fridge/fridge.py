@@ -303,7 +303,8 @@ class SlabFridge():
                 #self.automation_state="RUNNING"
             
     def update_log(self,logStateOnly=False,logAutomationState=False):
-        Thread(target=self.update_compressor_status)
+        #Thread(target=self.update_compressor_status)
+        self.update_compressor_status()
         self.update_temperatures()
         self.update_pressure()
         
@@ -419,7 +420,6 @@ class SlabFridge():
     
     def update_compressor_status(self):
         #note: this function is slow. Best to run this threaded
-        print('updating compressor')
         self.compressor_status = self.compressor.get_compressor_status()
         
     def set_compressor_status(self,state=False,override=False):
