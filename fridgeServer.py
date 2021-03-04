@@ -67,6 +67,7 @@ def set_compressor():
     #TODO authentication here
     logging.info('%s setting compressor to: %s',request.host_url,value)
     fridge.set_compressor_status(value)
+    return 'set'
 
 @app.route("/set/switch",methods=['POST'])
 def set_switch():
