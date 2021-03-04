@@ -61,7 +61,12 @@ def log_listing():
         return send_file(path)
     else:
         return os.listdir(path)
-
+@app.route("/set/compressor",methods=['POST'])
+def set_compressor():
+    value = request.form.get('value')=='true'
+    #TODO authentication here
+    logging.info('%s setting compressor to: %s',request.host_url,value)
+    fridge.set_compressor_status(value)
 
 @app.route("/set/switch",methods=['POST'])
 def set_switch():
