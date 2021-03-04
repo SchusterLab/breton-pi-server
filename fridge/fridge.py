@@ -427,7 +427,7 @@ class SlabFridge():
             if state:
                 #compressor ON requested
                 if self.get_pressure()*1000 < self.cfg['vacuum_parameters']['interlock_pressure'] or override:
-                    logging.info('Turning compressor ON. Pressure is %s',format(self.get_pressure()*1000,'1.1e')
+                    logging.info('Turning compressor ON. Pressure is %s',format(self.get_pressure()*1000,'1.1e'))
                 else:
                     logging.warn('Attempted to turn ON compressor when pressure was %s',format(self.get_pressure()*1000,'1.1e'))
             else:
