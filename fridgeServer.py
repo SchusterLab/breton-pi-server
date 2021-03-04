@@ -42,7 +42,7 @@ def get_switches():
 
 @app.route("/get/status/compressor")
 def get_status_compressor():
-    return 'not setup yet'
+    return jsonify(fridge.get_compressor_status())
 
 @app.route("/get/status/bk")
 def get_status_bk():
