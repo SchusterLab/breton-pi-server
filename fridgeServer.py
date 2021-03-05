@@ -97,7 +97,7 @@ def set_state():
         
 if __name__ == "__main__":
     logging.info('Starting automation thread')
-    fridge = SlabFridge(configfile="fridge/Breton.json",useInflux=True,logStateOnly=True)
+    fridge = SlabFridge(configfile="fridge/Breton.json",useInflux=True)
     automation_thread = FridgeThread(fridge)
     automation_thread.start()
     fridge.automation_thread = automation_thread

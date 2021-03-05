@@ -33,7 +33,7 @@ class FridgeThread(Thread):
         self.exit = False
         
         self.last_logupdate = time.time()
-        self.last_state_logupdate = time.time()
+        self.last_slow_logupdate = time.time()
         self.cycle_finished_time = None
         
         self.logging_interval = self.fridge.logging_interval
@@ -122,8 +122,7 @@ class FridgeThread(Thread):
         #check that cycle has ended
         if self.fridge.get_temperature('pump') > self.fridge.cfg['warmup_parameters']['Warm_temp']:
             #finished actively warming, turn off automation
-            #TODO make this use the set_automation_state call
-            self.fridge.automation_state = None
+            self.fridge.set_automation_state(None)
             self.fridge.set_heater_current("pump_heater", 0)
             self.fridge.set_heater_voltage("pump_heater", 0)
             self.fridge.set_heater_output("pump_heater", False)
@@ -163,10 +162,10 @@ class FridgeThread(Thread):
                 self.fridge.set_automation_state('FINE PUMP')
         else:
             logging.warn('No pressure gauge found, aborting pumping!')
-            #TODO make this use the set_automation_state call
-            self.fridge.automation_state = None
+            self.fridge.set_automation_state(None)
     
     def fine_pump(self):
+        #TODO this function crashes if pump_start_time is not set!
         #check if below fine pump threshold or enough time has passed
         last_pressure = self.fridge.get_pressure()*1000
         if last_pressure is not None:
@@ -176,23 +175,27 @@ class FridgeThread(Thread):
                 self.fridge.set_automation_state('COOLDOWN')
         else:
             logging.warn('No pressure gauge found, aborting pumping!')
-            #TODO make this use the set_automation_state call
-            self.fridge.automation_state = None
+            self.fridge.set_automation_state(None)
     
     def run(self):
         try:
             while not self.exit:
                 if self.fridge.automation_state is not None:
-                    self.state_dict[self.fridge.automation_state]()
+                    try:
+                        self.state_dict[self.fridge.automation_state]()
+                    except Exception:
+                        logging.exception('Error running automation! Setting automation state to None')
+                        self.fridge.automation_state = None
+                        
                 if time.time() - self.last_logupdate > self.logging_interval:
                     #time to update log
                     #check if state changed or 10 log updates have passed
-                    if self.fridge.state_changed_flag or time.time() - self.last_state_logupdate > 10*self.logging_interval:
-                        self.fridge.update_log(logStateOnly=self.fridge.logStateOnly,logAutomationState=True)
+                    if self.fridge.state_changed_flag or time.time() - self.last_slow_logupdate > 10*self.logging_interval:
+                        self.fridge.update_log(logAutomationState=True)
                         self.fridge.state_changed_flag=False
-                        self.last_state_logupdate = time.time()
+                        self.last_slow_logupdate = time.time()
                     else:
-                        self.fridge.update_log(logStateOnly=self.fridge.logStateOnly)
+                        self.fridge.update_log()
                     self.last_logupdate = time.time()
                     
                 time.sleep(0.5)
@@ -204,14 +207,12 @@ class FridgeThread(Thread):
 
 
 class SlabFridge():
-    def __init__(self,configfile,useInflux=False,logStateOnly=False):
+    def __init__(self,configfile,useInflux=False):
         self.lock = Lock()
         self.useInflux = useInflux
         
         if self.useInflux:
             self.client = setupDatabase()
-        
-        self.logStateOnly=logStateOnly
         
         self.automation_state=None
         self.subroutine_state='NONE'
@@ -224,6 +225,7 @@ class SlabFridge():
 
         self.cfg = cfg
         self.logging_interval = self.cfg['logging_parameters']['logging_interval']
+        self.slow_logging_interval = self.cfg['logging_parameters']['slow_logging_interval']
 
         self.__dict__.update(cfg)
         
@@ -302,7 +304,7 @@ class SlabFridge():
                 self.set_automation_state('RUNNING')
                 #self.automation_state="RUNNING"
             
-    def update_log(self,logStateOnly=False,logAutomationState=False):
+    def update_log(self,logAutomationState=False):
         #Thread(target=self.update_compressor_status)
         self.update_compressor_status()
         self.update_temperatures()
@@ -314,7 +316,7 @@ class SlabFridge():
             else:
                 logToInflux(self.get_temperatures(),client=self.client,Pressure=self.get_pressure_data())
         #write to console
-        #LogToConsole(self.TempKeys, [t[self.index] for t in self.TemplateData],State=self.stateChanges.get(self.index,None),logStateOnly=logStateOnly)
+        #LogToConsole(self.TempKeys, [t[self.index] for t in self.TemplateData],State=self.stateChanges.get(self.index,None))
 
     def stop_automation(self):
         self.automation_state = None
@@ -324,7 +326,7 @@ class SlabFridge():
         self.set_heater_output("pump_heater", False)   #redundant?
 
     def set_automation_state(self,state):
-        if state in self.automation_thread.state_dict.keys():
+        if state is None or state in self.automation_thread.state_dict.keys():
             self.automation_state = state
             self.state_changed_flag = True
         
