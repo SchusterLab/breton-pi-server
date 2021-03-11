@@ -153,6 +153,7 @@ class FridgeThread(Thread):
     def start_pumpdown(self):
         logging.info("Started pumping out vacuum can.")
         self.pump_start_time = time.time()
+        self.fridge.set_automation_state('ROUGH PUMP')
         
     def rough_pump(self):
         #check if below interlock threshold
