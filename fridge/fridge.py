@@ -172,7 +172,7 @@ class FridgeThread(Thread):
         if last_pressure is not None:
             if (last_pressure < self.fridge.cfg['vacuum_parameters']['high_vac_pressure']) or (time.time() - self.pump_start_time > 3600*self.fridge.cfg['vacuum_parameters']['max_pump_time_h']):
                 logging.info('Pressure is %s. Turning compressor on and beginning cooldown.',format(last_pressure,'1.1e'))
-                self.fridge.set_compressor(True)
+                self.fridge.set_compressor_state(True)
                 self.fridge.set_automation_state('COOLDOWN')
         else:
             logging.warn('No pressure gauge found, aborting pumping!')
@@ -425,7 +425,7 @@ class SlabFridge():
         #note: this function is slow. Best to run this threaded
         self.compressor_status = self.compressor.get_compressor_status()
         
-    def set_compressor_status(self,state=False,override=False):
+    def set_compressor_state(self,state=False,override=False):
         #logging.info('Setting compressor to %s',state)
         if self.compressor_status!=state:
             #state change requested!
