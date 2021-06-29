@@ -6,7 +6,7 @@ A wrapper for mcp2200.py written by ctdx (https://github.com/cdtx/mcp2200.git)
 Implements basic set/clear functions for 4 relay Denkovi Relay board, which uses GPIO pins 0-3 on MCP2200 chip
 '''
 
-from MCP2200 import MCP2200Device
+from .MCP2200 import MCP2200Device
 
 class DenkoviRelayBoard(MCP2200Device):
     #note: eeprom commands from MCP2200Device class still exposed
