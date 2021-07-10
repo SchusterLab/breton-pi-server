@@ -423,7 +423,12 @@ class SlabFridge():
     
     def update_compressor_status(self):
         #note: this function is slow. Best to run this threaded
-        self.compressor_status = self.compressor.get_compressor_status()
+        if self.compressor is not None:
+            try:
+                self.compressor_status = self.compressor.get_compressor_status()
+            except Exception:
+                logging.exception('Error reading compressor')
+                self.compressor = None
         
     def set_compressor_state(self,state=False,override=False):
         #logging.info('Setting compressor to %s',state)
