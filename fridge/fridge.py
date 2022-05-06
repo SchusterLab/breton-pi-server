@@ -5,7 +5,7 @@ Created on Fri May 22 14:18:11 2020
 """
 from threading import Thread, Lock
 
-from h5py import File
+#from h5py import File
 import numpy as np
 import time
 import json
