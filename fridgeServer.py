@@ -100,7 +100,7 @@ if __name__ == "__main__":
     fridge = SlabFridge(configfile="fridge/Breton.json",useInflux=True)
     automation_thread = FridgeThread(fridge)
     automation_thread.start()
-    fridge.automation_thread = automation_thread
+    #fridge.automation_thread = automation_thread
     
     logging.info('Starting app.')
     from waitress import serve

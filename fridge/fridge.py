@@ -29,7 +29,9 @@ def LogToConsole(Temps,State=None,Pressure=None,logStateOnly=False):
 class FridgeThread(Thread):
     def __init__(self,fridge):
         Thread.__init__(self)
+        logging.info('Fridge thread created')
         self.fridge = fridge
+        self.fridge.automation_thread = self    #cache reference to parent
         self.exit = False
         
         self.last_logupdate = time.time()
@@ -236,7 +238,9 @@ class SlabFridge():
         '''
         # Import instruments
         self.ps = BKPowerSupply(name='bkp') #note: during power outage BKP will be powered off
+        logging.info('Connected to BKPowerSupply')
         self.monitor = Cryocon(name='monitor')
+        logging.info('Connected to Cryocon')
         try:
             self.compressor = CP2800(name='compressor')
         except Exception:
@@ -266,6 +270,7 @@ class SlabFridge():
         if self.cfg['forceResetOnStart']:
             self.initialize_all_off()
                 
+        time.sleep(1.0)
         self.determine_state()
     
     def initialize_all_off(self):
@@ -302,8 +307,8 @@ class SlabFridge():
         if not self.cfg['forceResetOnStart']:
             if (self.get_temperature('1k_pot') < self.cycle_parameters['successful_cycle_threshold']) and (self.get_temperature('1k_pot') > 0):
                 logging.info('Cycle hold in progress. Resuming automation...')
-                self.set_automation_state('RUNNING')
-                #self.automation_state="RUNNING"
+                #self.set_automation_state('RUNNING')
+                self.automation_state="RUNNING"
             
     def update_log(self,logAutomationState=False):
         #Thread(target=self.update_compressor_status)
